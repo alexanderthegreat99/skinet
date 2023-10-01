@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { HomeModule } from './home/home.module';
 import { ErrorInterceptor } from './core/interceptors/error.interceptor';
+import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 // import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 // import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 // import { OrderDetailedComponent } from './order-detailed/order-detailed.component';
@@ -27,6 +28,7 @@ import { ErrorInterceptor } from './core/interceptors/error.interceptor';
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
+    {provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true}
   ],
   bootstrap: [AppComponent]
 })
