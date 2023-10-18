@@ -32,7 +32,7 @@ namespace Infrastructure.Services
 
             // get delivery method from repo
             var deliveryMethod = await _unitOfWork.Repository<DeliveryMethod>().GetByIdAsync(deliveryMethodId);
-
+  //hi
             // calc subtotal
             var subtotal = items.Sum(item => item.Price * item.Quantity);
 
