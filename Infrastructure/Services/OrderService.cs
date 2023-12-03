@@ -32,21 +32,33 @@ namespace Infrastructure.Services
 
             // get delivery method from repo
             var deliveryMethod = await _unitOfWork.Repository<DeliveryMethod>().GetByIdAsync(deliveryMethodId);
-         
+
             // calc subtotal
             var subtotal = items.Sum(item => item.Price * item.Quantity);
 
-            // create order
-            var order = new Order(items, buyerEmail, shippingAddress, deliveryMethod, subtotal);
-            _unitOfWork.Repository<Order>().Add(order);
+            // check to see if order exists
+            var spec = new OrderByPaymentIntentIdSpecification(basket.PaymentIntentId);
+            var order = await _unitOfWork.Repository<Order>().GetEntityWithSpec(spec);
+
+            if (order != null)
+            {
+                order.ShipToAddress = shippingAddress;
+                order.DeliveryMethod = deliveryMethod;
+                order.Subtotal = subtotal;
+                _unitOfWork.Repository<Order>().Update(order);
+            }
+            else
+            {
+                // create order
+                order = new Order(items, buyerEmail, shippingAddress, deliveryMethod,
+                    subtotal, basket.PaymentIntentId);
+                _unitOfWork.Repository<Order>().Add(order);
+            }
 
             // save to db
             var result = await _unitOfWork.Complete();
 
             if (result <= 0) return null;
-
-            // delete basket
-            await _basketRepo.DeleteBasketAsync(basketId);
 
             // return order
             return order;
@@ -54,7 +66,7 @@ namespace Infrastructure.Services
 
         public async Task<IReadOnlyList<DeliveryMethod>> GetDeliveryMethodsAsync()
         {
-             return await _unitOfWork.Repository<DeliveryMethod>().ListAllAsync();
+            return await _unitOfWork.Repository<DeliveryMethod>().ListAllAsync();
         }
 
         public async Task<Order> GetOrderByIdAsync(int id, string buyerEmail)
@@ -71,4 +83,4 @@ namespace Infrastructure.Services
             return await _unitOfWork.Repository<Order>().ListAsync(spec);
         }
     }
-} 
+}
